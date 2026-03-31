@@ -1,0 +1,14 @@
+# Vinly team must approve all changes to critical files
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: Vinly core team owns everything
+* @vinly-co/core
+
+# Schema changes require extra review
+/schema/ @vinly-co/core @vinly-co/security
+
+# CI/CD changes require extra review
+/.github/ @vinly-co/core @vinly-co/security
+
+# Scripts require security review
+/scripts/ @vinly-co/core @vinly-co/security

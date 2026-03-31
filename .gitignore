@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+
+# Build
+dist/
+build/
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env files — NEVER commit secrets
+.env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.test
+*.env
+
+# Secrets & credentials — aggressive blocking
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials.*
+secrets.*
+service-account*.json
+*-credentials.json
+*.secret
+token.json
+tokens.json
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Misc
+*.tsbuildinfo
+next-env.d.ts

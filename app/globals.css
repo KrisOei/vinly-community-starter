@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Default theme variables (overridden by ThemeProvider at runtime) */
+:root {
+  --color-primary: #6D28D9;
+  --color-primary-light: hsl(263, 70%, 80%);
+  --color-secondary: #F59E0B;
+  --color-accent: #10B981;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f9fafb;
+  --color-on-primary: #ffffff;
+  --color-on-surface: #111827;
+  --color-on-surface-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --font-display: "DM Sans", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --radius-card: 16px;
+  --radius-button: 10px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* Utility for the preview badge */
+.preview-badge {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 9999;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}

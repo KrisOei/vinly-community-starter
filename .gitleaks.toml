@@ -1,0 +1,60 @@
+# Gitleaks configuration
+# See: https://github.com/gitleaks/gitleaks
+
+title = "Vinly Community Starter — Gitleaks Config"
+
+[extend]
+# Use the default gitleaks rules as a baseline
+useDefault = true
+
+# Additional custom rules specific to Vinly
+
+[[rules]]
+id = "vinly-stripe-key"
+description = "Stripe Secret Key"
+regex = '''sk_(live|test)_[a-zA-Z0-9]{20,}'''
+tags = ["key", "stripe"]
+
+[[rules]]
+id = "vinly-clerk-key"
+description = "Clerk Secret Key"
+regex = '''sk_(live|test)_[a-zA-Z0-9]{20,}'''
+tags = ["key", "clerk"]
+
+[[rules]]
+id = "vinly-supabase-url"
+description = "Supabase Connection URL"
+regex = '''https://[a-z0-9]+\.supabase\.co'''
+tags = ["url", "supabase"]
+
+[[rules]]
+id = "vinly-database-url"
+description = "PostgreSQL Connection String"
+regex = '''postgres(ql)?://[^\s'"]+'''
+tags = ["url", "database"]
+
+[[rules]]
+id = "vinly-redis-url"
+description = "Redis Connection String"
+regex = '''redis(s)?://[^\s'"]+'''
+tags = ["url", "redis"]
+
+[[rules]]
+id = "vinly-sendgrid-key"
+description = "SendGrid API Key"
+regex = '''SG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}'''
+tags = ["key", "sendgrid"]
+
+[[rules]]
+id = "vinly-twilio-sid"
+description = "Twilio Account SID"
+regex = '''AC[a-f0-9]{32}'''
+tags = ["key", "twilio"]
+
+# Allowlist for false positives
+[allowlist]
+paths = [
+  '''node_modules/''',
+  '''.gitleaks.toml''',
+  '''scripts/validate.ts''',  # Contains regex patterns for scanning
+]

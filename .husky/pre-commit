@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# 1. Quick secret scan on staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -n "$STAGED_FILES" ]; then
+  # Check for common secret patterns in staged files
+  for file in $STAGED_FILES; do
+    if [ -f "$file" ]; then
+      # Check for potential API keys, tokens, and secrets
+      if grep -qEi '(sk_live_|sk_test_|AKIA[0-9A-Z]{16}|-----BEGIN.*PRIVATE KEY-----|postgres(ql)?://[^\s]+|redis://[^\s]+|SG\.[a-zA-Z0-9_-]{22}|AC[a-f0-9]{32})' "$file" 2>/dev/null; then
+        echo "❌ BLOCKED: Potential secret detected in $file"
+        echo "   Run 'npm run validate' for details."
+        exit 1
+      fi
+    fi
+  done
+fi
+
+# 2. Reject .env files
+ENV_FILES=$(echo "$STAGED_FILES" | grep -E '\.env' || true)
+if [ -n "$ENV_FILES" ]; then
+  echo "❌ BLOCKED: .env files should never be committed:"
+  echo "$ENV_FILES"
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed"
