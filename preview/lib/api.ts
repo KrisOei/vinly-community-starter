@@ -1,18 +1,30 @@
 /**
  * API Client
  *
- * Lightweight fetch wrapper for the local mock API.
- * Use these functions in client components to interact with the API endpoints.
+ * Lightweight fetch wrapper for the mock and live Vinly API.
  *
- * In production, these would point to https://api.vinly.co/v1/...
- * Here they hit localhost:3000/api/... with the same response shapes.
+ * When NEXT_PUBLIC_DEMO_MODE=true (default), all calls hit the local
+ * mock API at /api/... — no internet required.
+ *
+ * When NEXT_PUBLIC_DEMO_MODE=false, calls go to NEXT_PUBLIC_API_URL
+ * with the VINLY_API_KEY header.
  */
 
-const BASE = "/api";
+import { isDemoMode, apiBaseUrl } from "./env";
+
+const BASE = isDemoMode ? "/api" : apiBaseUrl;
 
 async function fetcher<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (!isDemoMode && process.env.VINLY_API_KEY) {
+    headers["Authorization"] = `Bearer ${process.env.VINLY_API_KEY}`;
+  }
+
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers,
     ...init,
   });
 
@@ -241,4 +253,144 @@ export function chatWithAssistant(message: string) {
     method: "POST",
     body: JSON.stringify({ message }),
   });
+}
+
+// ─── Notifications ─────────────────────────────────────────────────────────
+
+export function getNotifications(params?: { type?: string; unread?: boolean; page?: number; limit?: number }) {
+  const qs = new URLSearchParams();
+  if (params?.type) qs.set("type", params.type);
+  if (params?.unread) qs.set("unread", "true");
+  if (params?.page) qs.set("page", params.page.toString());
+  if (params?.limit) qs.set("limit", params.limit.toString());
+  const query = qs.toString();
+  return fetcher<{
+    notifications: Array<{
+      id: string;
+      type: string;
+      title: string;
+      message: string;
+      read: boolean;
+      chatId: string | null;
+      postId: string | null;
+      eventId: string | null;
+      createdAt: string;
+    }>;
+    unreadCount: number;
+    pagination: { page: number; limit: number; total: number; totalPages: number; hasMore: boolean };
+  }>(`/notifications${query ? `?${query}` : ""}`);
+}
+
+export function markNotificationsRead(notificationIds: string[]) {
+  return fetcher<{ updated: number; message: string }>("/notifications", {
+    method: "PATCH",
+    body: JSON.stringify({ notificationIds }),
+  });
+}
+
+export function markAllNotificationsRead() {
+  return fetcher<{ updated: number; message: string }>("/notifications", {
+    method: "PATCH",
+    body: JSON.stringify({ markAllRead: true }),
+  });
+}
+
+// ─── Chats ─────────────────────────────────────────────────────────────────
+
+export function getChats() {
+  return fetcher<{
+    chats: Array<{
+      id: string;
+      name: string | null;
+      groupChat: boolean;
+      participants: Array<{
+        userId: string;
+        role: string;
+        user: { id: string; name: string; title: string; profilePictureUrl: string | null } | null;
+      }>;
+      lastMessage: { content: string; createdAt: string; author: { id: string; name: string } | null } | null;
+      unreadCount: number;
+      updatedAt: string;
+    }>;
+    total: number;
+  }>("/chats");
+}
+
+export function getChat(id: string) {
+  return fetcher<{
+    chat: {
+      id: string;
+      name: string | null;
+      groupChat: boolean;
+      participants: Array<{
+        userId: string;
+        role: string;
+        user: { id: string; name: string; title: string; profilePictureUrl: string | null } | null;
+      }>;
+      messages: Array<{
+        id: string;
+        content: string;
+        createdById: string;
+        createdAt: string;
+        author: { id: string; name: string; profilePictureUrl: string | null } | null;
+      }>;
+    };
+  }>(`/chats?id=${id}`);
+}
+
+export function createChat(participantIds: string[], message: string, name?: string) {
+  return fetcher<{ chat: unknown }>("/chats", {
+    method: "POST",
+    body: JSON.stringify({ participantIds, message, name }),
+  });
+}
+
+// ─── Invites ───────────────────────────────────────────────────────────────
+
+export function getInvites(params?: { status?: string; type?: string }) {
+  const qs = new URLSearchParams();
+  if (params?.status) qs.set("status", params.status);
+  if (params?.type) qs.set("type", params.type);
+  const query = qs.toString();
+  return fetcher<{
+    invites: Array<{
+      id: string;
+      email: string | null;
+      phoneNumber: string | null;
+      status: string;
+      type: string;
+      message: string | null;
+      createdBy: { id: string; name: string; email: string } | null;
+      createdAt: string;
+      expiresAt: string;
+    }>;
+    total: number;
+    stats: { pending: number; accepted: number; declined: number; expired: number };
+  }>(`/invites${query ? `?${query}` : ""}`);
+}
+
+export function createInvite(params: { email?: string; phoneNumber?: string; message?: string; type?: string }) {
+  return fetcher<{ invite: unknown }>("/invites", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+// ─── Search ────────────────────────────────────────────────────────────────
+
+export function search(query: string, params?: { scope?: string[]; limit?: number }) {
+  const qs = new URLSearchParams();
+  qs.set("q", query);
+  if (params?.scope) qs.set("scope", params.scope.join(","));
+  if (params?.limit) qs.set("limit", params.limit.toString());
+  return fetcher<{
+    query: string;
+    results: {
+      members?: Array<{ id: string; name: string; title: string; location: string; building: string }>;
+      posts?: Array<{ id: string; content: string; channelName: string; author: { id: string; name: string } | null; createdAt: string }>;
+      channels?: Array<{ id: string; name: string; description: string | null; emoji: string | null; memberCount: number }>;
+      events?: Array<{ id: string; name: string; description: string; type: string; date: string; status: string }>;
+    };
+    totalResults: number;
+  }>(`/search?${qs.toString()}`);
 }

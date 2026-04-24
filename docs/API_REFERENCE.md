@@ -287,12 +287,223 @@ The mock assistant responds based on keywords (members, events, channels, help).
 
 ---
 
+## Notifications
+
+### `GET /api/notifications`
+
+Returns notifications for the current user (mock: always user_001).
+
+**Query params:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `type` | `chat`, `mention`, `event`, `post_like`, `comment`, `invite`, `system` | Filter by type |
+| `unread` | `true` | Show only unread notifications |
+| `page` | number | Page number (default: 1) |
+| `limit` | number | Items per page (default: 20) |
+
+**Response:**
+```json
+{
+  "notifications": [
+    {
+      "id": "notif_001",
+      "type": "chat",
+      "title": "New message",
+      "message": "Sarah Chen sent you a message",
+      "read": false,
+      "chatId": "chat_001",
+      "postId": null,
+      "eventId": null,
+      "createdAt": "2026-04-20T..."
+    }
+  ],
+  "unreadCount": 5,
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 10,
+    "totalPages": 1,
+    "hasMore": false
+  }
+}
+```
+
+### `PATCH /api/notifications`
+
+Mark notifications as read.
+
+**Body (mark specific):**
+```json
+{
+  "notificationIds": ["notif_001", "notif_002"]
+}
+```
+
+**Body (mark all):**
+```json
+{
+  "markAllRead": true
+}
+```
+
+---
+
+## Chats
+
+### `GET /api/chats`
+
+Returns all chats (DMs and group chats) with participants and last message.
+
+**Response:**
+```json
+{
+  "chats": [
+    {
+      "id": "chat_001",
+      "name": null,
+      "groupChat": false,
+      "participants": [
+        {
+          "userId": "user_001",
+          "role": "admin",
+          "user": { "id": "user_001", "name": "Sarah Chen", "title": "Founder @ InboxZero", "profilePictureUrl": null }
+        }
+      ],
+      "lastMessage": {
+        "content": "How about Thursday after standup?",
+        "createdAt": "2026-04-22T...",
+        "author": { "id": "user_002", "name": "Marcus Johnson" }
+      },
+      "unreadCount": 1,
+      "updatedAt": "2026-04-22T..."
+    }
+  ],
+  "total": 3
+}
+```
+
+### `GET /api/chats?id=chat_001`
+
+Returns a single chat with full message history and participant details.
+
+### `POST /api/chats`
+
+Create a new chat (simulated).
+
+**Body:**
+```json
+{
+  "participantIds": ["user_002", "user_003"],
+  "message": "Hey, wanted to connect!",
+  "name": "Optional group name"
+}
+```
+
+---
+
+## Invites
+
+### `GET /api/invites`
+
+Returns invites with status and creator info.
+
+**Query params:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `status` | `pending`, `accepted`, `declined`, `expired` | Filter by status |
+| `type` | `community`, `chat`, `event` | Filter by type |
+
+**Response:**
+```json
+{
+  "invites": [
+    {
+      "id": "invite_001",
+      "email": "newfounder@example.com",
+      "phoneNumber": null,
+      "status": "pending",
+      "type": "community",
+      "message": "Would love to have you in the community!",
+      "createdBy": { "id": "user_001", "name": "Sarah Chen", "email": "sarah@example.com" },
+      "createdAt": "2026-04-21T...",
+      "expiresAt": "2026-05-05T..."
+    }
+  ],
+  "total": 5,
+  "stats": {
+    "pending": 3,
+    "accepted": 1,
+    "declined": 1,
+    "expired": 0
+  }
+}
+```
+
+### `POST /api/invites`
+
+Send a new invite (simulated).
+
+**Body:**
+```json
+{
+  "email": "friend@example.com",
+  "message": "Join our community!",
+  "type": "community"
+}
+```
+
+---
+
+## Search
+
+### `GET /api/search`
+
+Search across members, posts, channels, and events.
+
+**Query params:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `q` | string (min 2 chars) | Search query |
+| `scope` | comma-separated | Entity types to search: `members`, `posts`, `channels`, `events` (default: all) |
+| `limit` | number | Max results per entity type (default: 5) |
+
+**Example:** `GET /api/search?q=fintech&scope=members,posts&limit=3`
+
+**Response:**
+```json
+{
+  "query": "fintech",
+  "results": {
+    "members": [
+      { "id": "user_007", "name": "David Okonkwo", "title": "Technical Founder", "location": "Lagos, NG", "building": "Payment infrastructure for African SaaS companies" }
+    ],
+    "posts": [
+      { "id": "post_005", "content": "Excited to connect with other founders building fintech...", "channelName": "Introductions", "author": { "id": "user_007", "name": "David Okonkwo" }, "createdAt": "2026-03-24T..." }
+    ]
+  },
+  "totalResults": 2
+}
+```
+
+---
+
 ## Using the API Client
 
 Import the typed client in your components:
 
 ```typescript
-import { getMembers, getPosts, chatWithAssistant } from "@/preview/lib/api";
+import {
+  getMembers,
+  getPosts,
+  chatWithAssistant,
+  getNotifications,
+  getChats,
+  getInvites,
+  search,
+} from "@/preview/lib/api";
 
 // Fetch members with search
 const { members, pagination } = await getMembers({ search: "fintech", page: 1 });
@@ -302,6 +513,15 @@ const { post } = await createPost("channel_001", "Hello from the API!");
 
 // Chat with the assistant
 const reply = await chatWithAssistant("What events are coming up?");
+
+// Get unread notifications
+const { notifications, unreadCount } = await getNotifications({ unread: true });
+
+// List chats
+const { chats } = await getChats();
+
+// Search across the community
+const { results } = await search("fintech", { scope: ["members", "posts"] });
 ```
 
 See [`preview/lib/api.ts`](../preview/lib/api.ts) for the full typed client.

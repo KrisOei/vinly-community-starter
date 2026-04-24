@@ -1,4 +1,5 @@
 import config from "@/preview/lib/config";
+import { isDemoMode } from "@/preview/lib/env";
 import { HeroSection } from "@/preview/components/HeroSection";
 import { ChannelList } from "@/preview/components/ChannelList";
 import { PostFeed } from "@/preview/components/PostFeed";
@@ -12,6 +13,13 @@ import { PreviewNav } from "@/preview/components/PreviewNav";
 export default function PreviewPage() {
   return (
     <div className="min-h-screen">
+      {isDemoMode && (
+        <div className="bg-primary/10 border-b border-primary/20 py-2 px-6 text-center text-sm text-primary">
+          Running in <strong>demo mode</strong> with mock data. No internet required.{" "}
+          Set <code className="bg-primary/10 px-1.5 py-0.5 rounded text-xs font-mono">NEXT_PUBLIC_DEMO_MODE=false</code> in{" "}
+          <code className="bg-primary/10 px-1.5 py-0.5 rounded text-xs font-mono">.env.local</code> to connect to a live API.
+        </div>
+      )}
       <PreviewNav />
 
       <main>

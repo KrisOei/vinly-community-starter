@@ -326,6 +326,210 @@ export const membershipStats: MockMembershipStats[] = config.membershipTiers.map
   churnRate: tier.price === 0 ? 0 : Math.round(Math.random() * 5 * 10) / 10,
 }));
 
+// ─── Notifications ─────────────────────────────────────────────────────────
+
+export interface MockNotification {
+  id: string;
+  type: "chat" | "mention" | "event" | "post_like" | "comment" | "invite" | "system";
+  title: string;
+  message: string;
+  read: boolean;
+  sentToUserId: string;
+  chatId: string | null;
+  postId: string | null;
+  eventId: string | null;
+  createdAt: string;
+}
+
+const NOTIFICATION_TEMPLATES: Omit<MockNotification, "id" | "sentToUserId" | "createdAt">[] = [
+  { type: "chat", title: "New message", message: "Sarah Chen sent you a message", read: false, chatId: "chat_001", postId: null, eventId: null },
+  { type: "mention", title: "You were mentioned", message: "Marcus Johnson mentioned you in #General", read: false, chatId: null, postId: "post_003", eventId: null },
+  { type: "event", title: "Event reminder", message: "Weekly Standup starts in 1 hour", read: true, chatId: null, postId: null, eventId: "event_001" },
+  { type: "post_like", title: "Post liked", message: "Priya Patel liked your post in #Wins", read: true, chatId: null, postId: "post_001", eventId: null },
+  { type: "comment", title: "New comment", message: "Alex Rivera commented on your post", read: false, chatId: null, postId: "post_002", eventId: null },
+  { type: "invite", title: "New member", message: "Sophie Dubois accepted your invite", read: true, chatId: null, postId: null, eventId: null },
+  { type: "system", title: "Welcome!", message: "Your community is ready. Start by customizing your channels.", read: true, chatId: null, postId: null, eventId: null },
+  { type: "event", title: "New RSVP", message: "Jordan Kim RSVP'd to April Demo Day", read: false, chatId: null, postId: null, eventId: "event_002" },
+  { type: "chat", title: "New message", message: "David Okonkwo replied in Fintech Founders chat", read: false, chatId: "chat_003", postId: null, eventId: null },
+  { type: "post_like", title: "Post liked", message: "3 people liked your post in #Resources", read: true, chatId: null, postId: "post_004", eventId: null },
+];
+
+export const notifications: MockNotification[] = NOTIFICATION_TEMPLATES.map((n, i) => ({
+  id: `notif_${(i + 1).toString().padStart(3, "0")}`,
+  ...n,
+  sentToUserId: users[0].id,
+  createdAt: randomDate(7 - i),
+}));
+
+// ─── Chats ─────────────────────────────────────────────────────────────────
+
+export interface MockChat {
+  id: string;
+  name: string | null;
+  groupChat: boolean;
+  participants: { userId: string; role: "admin" | "user" }[];
+  lastMessage: { content: string; createdById: string; createdAt: string } | null;
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MockChatMessage {
+  id: string;
+  chatId: string;
+  content: string;
+  createdById: string;
+  createdAt: string;
+}
+
+const CHAT_MESSAGES: { chatId: string; content: string; authorIndex: number }[] = [
+  { chatId: "chat_001", content: "Hey Sarah! Saw your MRR post — congrats! Would love to hear more about the team plan pivot.", authorIndex: 1 },
+  { chatId: "chat_001", content: "Thanks Marcus! Yeah, the key insight was that individual users churned fast but teams stuck around. Happy to jump on a call about it.", authorIndex: 0 },
+  { chatId: "chat_001", content: "That would be great. How about Thursday after standup?", authorIndex: 1 },
+  { chatId: "chat_002", content: "Quick question — anyone here used Lemon Squeezy for payments? Considering switching from Stripe for the indie plan.", authorIndex: 3 },
+  { chatId: "chat_002", content: "I've used it for my side project. Works well for simple pricing but you'll miss Stripe's webhook flexibility.", authorIndex: 6 },
+  { chatId: "chat_002", content: "Good to know. I think I'll stick with Stripe then — we need custom webhook handling for onboarding.", authorIndex: 3 },
+  { chatId: "chat_003", content: "David, would love to learn more about the payment rails you're building. We might have some overlap with our fintech clients.", authorIndex: 4 },
+  { chatId: "chat_003", content: "Absolutely! We're focused on local payment methods — M-Pesa, bank transfers, etc. Happy to share our architecture.", authorIndex: 6 },
+];
+
+export const chats: MockChat[] = [
+  {
+    id: "chat_001",
+    name: null,
+    groupChat: false,
+    participants: [
+      { userId: users[0].id, role: "admin" },
+      { userId: users[1].id, role: "user" },
+    ],
+    lastMessage: { content: "That would be great. How about Thursday after standup?", createdById: users[1].id, createdAt: randomDate(1) },
+    unreadCount: 1,
+    createdAt: randomDate(14),
+    updatedAt: randomDate(1),
+  },
+  {
+    id: "chat_002",
+    name: "Payment Providers Discussion",
+    groupChat: true,
+    participants: [
+      { userId: users[0].id, role: "admin" },
+      { userId: users[3].id, role: "user" },
+      { userId: users[6].id, role: "user" },
+      { userId: users[11].id, role: "user" },
+    ],
+    lastMessage: { content: "Good to know. I think I'll stick with Stripe then.", createdById: users[3].id, createdAt: randomDate(2) },
+    unreadCount: 0,
+    createdAt: randomDate(21),
+    updatedAt: randomDate(2),
+  },
+  {
+    id: "chat_003",
+    name: "Fintech Founders",
+    groupChat: true,
+    participants: [
+      { userId: users[0].id, role: "admin" },
+      { userId: users[4].id, role: "user" },
+      { userId: users[6].id, role: "user" },
+    ],
+    lastMessage: { content: "Happy to share our architecture.", createdById: users[6].id, createdAt: randomDate(3) },
+    unreadCount: 2,
+    createdAt: randomDate(30),
+    updatedAt: randomDate(3),
+  },
+];
+
+export const chatMessages: MockChatMessage[] = CHAT_MESSAGES.map((m, i) => ({
+  id: `msg_${(i + 1).toString().padStart(3, "0")}`,
+  chatId: m.chatId,
+  content: m.content,
+  createdById: users[m.authorIndex].id,
+  createdAt: randomDate(10 - i),
+}));
+
+// ─── Invites ───────────────────────────────────────────────────────────────
+
+export interface MockInvite {
+  id: string;
+  createdById: string;
+  email: string | null;
+  phoneNumber: string | null;
+  status: "pending" | "accepted" | "declined" | "expired";
+  type: "community" | "chat" | "event";
+  message: string | null;
+  chatId: string | null;
+  eventId: string | null;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export const invites: MockInvite[] = [
+  {
+    id: "invite_001",
+    createdById: users[0].id,
+    email: "newfounder@example.com",
+    phoneNumber: null,
+    status: "pending",
+    type: "community",
+    message: "Would love to have you in the community!",
+    chatId: null,
+    eventId: null,
+    createdAt: randomDate(3),
+    expiresAt: futureDate(14),
+  },
+  {
+    id: "invite_002",
+    createdById: users[0].id,
+    email: "teammate@example.com",
+    phoneNumber: null,
+    status: "pending",
+    type: "community",
+    message: "Join us — we're building something great.",
+    chatId: null,
+    eventId: null,
+    createdAt: randomDate(5),
+    expiresAt: futureDate(9),
+  },
+  {
+    id: "invite_003",
+    createdById: users[1].id,
+    email: "investor@example.com",
+    phoneNumber: null,
+    status: "accepted",
+    type: "community",
+    message: null,
+    chatId: null,
+    eventId: null,
+    createdAt: randomDate(20),
+    expiresAt: futureDate(0),
+  },
+  {
+    id: "invite_004",
+    createdById: users[0].id,
+    email: "designer@example.com",
+    phoneNumber: null,
+    status: "declined",
+    type: "community",
+    message: "We need your design skills!",
+    chatId: null,
+    eventId: null,
+    createdAt: randomDate(15),
+    expiresAt: futureDate(0),
+  },
+  {
+    id: "invite_005",
+    createdById: users[0].id,
+    email: null,
+    phoneNumber: "+14155551234",
+    status: "pending",
+    type: "chat",
+    message: "Let's connect!",
+    chatId: "chat_001",
+    eventId: null,
+    createdAt: randomDate(2),
+    expiresAt: futureDate(12),
+  },
+];
+
 // ─── Community Stats ────────────────────────────────────────────────────────
 
 export function getCommunityStats() {

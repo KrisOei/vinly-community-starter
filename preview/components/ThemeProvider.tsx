@@ -6,13 +6,14 @@ import { generateThemeCSS } from "@/preview/themes/engine";
 
 export function ThemeProvider({
   theme,
+  demoMode = false,
   children,
 }: {
   theme: Theme;
+  demoMode?: boolean;
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    // Inject theme CSS variables into the document
     const styleId = "vinly-theme";
     let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
     if (!styleEl) {
@@ -20,12 +21,21 @@ export function ThemeProvider({
       styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
-    styleEl.textContent = generateThemeCSS(theme);
+
+    let css = generateThemeCSS(theme);
+
+    if (demoMode) {
+      css = css
+        .replace(/--font-display:[^;]+;/, '--font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;')
+        .replace(/--font-body:[^;]+;/, '--font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;');
+    }
+
+    styleEl.textContent = css;
 
     return () => {
       styleEl?.remove();
     };
-  }, [theme]);
+  }, [theme, demoMode]);
 
   return <>{children}</>;
 }
