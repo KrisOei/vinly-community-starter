@@ -20,8 +20,8 @@ if [ -n "$STAGED_FILES" ]; then
   done
 fi
 
-# 2. Reject .env files
-ENV_FILES=$(echo "$STAGED_FILES" | grep -E '\.env' || true)
+# 2. Reject .env files (except .env.example)
+ENV_FILES=$(echo "$STAGED_FILES" | grep -E '\.env' | grep -v '\.env\.example$' || true)
 if [ -n "$ENV_FILES" ]; then
   echo "❌ BLOCKED: .env files should never be committed:"
   echo "$ENV_FILES"
